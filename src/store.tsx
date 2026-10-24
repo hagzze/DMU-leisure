@@ -18,11 +18,22 @@ export type Booking = { id: string; sessionId: string; bookedAt: string; paid: n
 
 export type Membership = { planId: string; since: string; number: string };
 
+export type ClubMembership = { clubId: string; team: string; since: string; number: string };
+export type SncMembership = { planId: string; since: string; number: string };
+export type SocietyMembership = { societyId: string; since: string };
+export type Activity = { id: string; title: string; subtitle: string; start: string; minutes: number; location: string; paid: number };
+
 type State = {
   user: User | null;
   card: Card | null;
   bookings: Booking[];
   membership: Membership | null;
+  clubs: ClubMembership[];
+  snc: SncMembership | null;
+  societies: SocietyMembership[];
+  activities: Activity[];
+  // event id -> scheduled notification id
+  reminders: Record<string, string>;
 };
 
 const STORAGE_KEY = 'dmu-leisure/v1';
@@ -38,7 +49,9 @@ const DEMO_USER: User = {
 
 const DEMO_CARD: Card = { brand: 'Visa', last4: '4242', expiry: '09/28', name: 'Alex Morgan' };
 
-const EMPTY: State = { user: null, card: null, bookings: [], membership: null };
+const EMPTY: State = { user: null, card: null, bookings: [], membership: null, clubs: [], snc: null, societies: [], activities: [], reminders: {} };
+
+const memberNumber = (prefix: string) => `${prefix}${Math.floor(10000000 + Math.random() * 89999999)}`;
 
 type Store = State & {
   ready: boolean;
@@ -52,6 +65,13 @@ type Store = State & {
   leaveMembership: () => void;
   saveCard: (card: Card | null) => void;
   updateUser: (patch: Partial<User>) => void;
+  joinClub: (clubId: string, team: string, details: Partial<User>) => void;
+  leaveClub: (clubId: string) => void;
+  joinSnc: (planId: string, details: Partial<User>) => void;
+  joinSociety: (societyId: string, details: Partial<User>) => void;
+  setReminder: (eventId: string, notificationId: string | null) => void;
+  bookActivity: (a: Activity) => void;
+  cancelActivity: (id: string) => void;
   resetDemo: () => void;
 };
 
@@ -111,15 +131,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setState((s) => ({
         ...s,
         user: s.user ? { ...s.user, ...details } : s.user,
-        membership: {
-          planId,
-          since: new Date().toISOString(),
-          number: `DMU${Math.floor(10000000 + Math.random() * 89999999)}`,
-        },
+        membership: { planId, since: new Date().toISOString(), number: memberNumber('DMU') },
       })),
     leaveMembership: () => setState((s) => ({ ...s, membership: null })),
     saveCard: (card) => setState((s) => ({ ...s, card })),
     updateUser: (patch) => setState((s) => ({ ...s, user: s.user ? { ...s.user, ...patch } : s.user })),
+    joinClub: (clubId, team, details) =>
+      setState((s) => ({
+        ...s,
+        user: s.user ? { ...s.user, ...details } : s.user,
+        clubs: [...s.clubs.filter((c) => c.clubId !== clubId), { clubId, team, since: new Date().toISOString(), number: memberNumber('TEAM') }],
+      })),
+    leaveClub: (clubId) => setState((s) => ({ ...s, clubs: s.clubs.filter((c) => c.clubId !== clubId) })),
+    joinSnc: (planId, details) =>
+      setState((s) => ({
+        ...s,
+        user: s.user ? { ...s.user, ...details } : s.user,
+        snc: { planId, since: new Date().toISOString(), number: memberNumber('SNC') },
+      })),
+    joinSociety: (societyId, details) =>
+      setState((s) => ({
+        ...s,
+        user: s.user ? { ...s.user, ...details } : s.user,
+        societies: [...s.societies.filter((x) => x.societyId !== societyId), { societyId, since: new Date().toISOString() }],
+      })),
+    bookActivity: (a) => setState((s) => ({ ...s, activities: [...s.activities.filter((x) => x.id !== a.id), a] })),
+    cancelActivity: (id) => setState((s) => ({ ...s, activities: s.activities.filter((x) => x.id !== id) })),
+    setReminder: (eventId, notificationId) =>
+      setState((s) => {
+        const { [eventId]: _old, ...rest } = s.reminders;
+        return { ...s, reminders: notificationId ? { ...rest, [eventId]: notificationId } : rest };
+      }),
     resetDemo: () => setState(EMPTY),
   };
 

@@ -1,23 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Href, router } from 'expo-router';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Lion } from '@/components/brand';
+import { BellButton } from '@/components/reminders';
 import { SessionRow } from '@/components/session-row';
-import { Badge, Button, Card, Press, Row, Screen, SectionTitle, T } from '@/components/ui';
-import { CATEGORIES, gymBusyness, HOURS, PLANS, SESSIONS } from '@/data';
-import { dayLabel, endTime, greeting, relative, time } from '@/format';
-import { upcomingBookings, useStore } from '@/store';
+import { Badge, Button, Card, IconName, Press, Row, Screen, SectionTitle, T } from '@/components/ui';
+import { gymBusyness, HOURS, PLANS, SESSIONS } from '@/data';
+import { dayLabel, dayShort, endTime, greeting, relative, time } from '@/format';
+import { myUpcoming, UpcomingItem } from '@/schedule';
+import { useStore } from '@/store';
 import { colors, radius, shadow, space } from '@/theme';
 
 export default function Home() {
-  const { user, bookings, membership } = useStore();
-  const now = new Date();
-  const next = upcomingBookings(bookings, now)[0];
-  const upNext = SESSIONS.filter((s) => new Date(s.start) > now).slice(0, 4);
+  const { user, bookings, clubs, snc, activities, membership } = useStore();
+  const [now] = useState(() => new Date());
+  const upcoming = myUpcoming({ bookings, clubs, snc, activities }, now);
+  const next = upcoming[0];
+  const today = SESSIONS.filter((s) => new Date(s.start) > now).slice(0, 3);
   const initials = `${user?.firstName[0] ?? ''}${user?.lastName[0] ?? ''}`;
 
   return (
@@ -30,7 +34,7 @@ export default function Home() {
             </T>
             <T v="hero">{user?.firstName}</T>
           </View>
-          <Press onPress={() => router.push('/account')} style={styles.avatar}>
+          <Press onPress={() => router.navigate('/account')} style={styles.avatar}>
             <T v="bodyBold" color={colors.white}>
               {initials}
             </T>
@@ -39,77 +43,51 @@ export default function Home() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(80).duration(500)} style={{ marginTop: space.xl }}>
-        {next ? (
-          <Press onPress={() => router.push({ pathname: '/class/[id]', params: { id: next.session.id } })} scaleTo={0.98}>
-            <LinearGradient colors={[colors.red, colors.redDeep]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-              <View style={{ position: 'absolute', right: -30, top: -20, opacity: 0.18 }}>
-                <Lion size={200} color="white" />
-              </View>
-              <Badge label={relative(next.session.start, now)} tone="dark" icon="time" />
-              <T v="title" color={colors.white} style={{ marginTop: space.lg }}>
-                {next.session.title}
-              </T>
-              <T v="body" color="rgba(255,255,255,0.8)">
-                {dayLabel(next.session.start, now)} · {time(next.session.start)}–{endTime(next.session.start, next.session.minutes)}
-              </T>
-              <Row style={{ marginTop: space.xl, justifyContent: 'space-between' }}>
-                <Row gap={6}>
-                  <Ionicons name="location" size={15} color="rgba(255,255,255,0.8)" />
-                  <T v="smallBold" color={colors.white}>
-                    {next.session.location}
-                  </T>
-                </Row>
-                <Row gap={4}>
-                  <T v="smallBold" color={colors.white}>
-                    Entry code
-                  </T>
-                  <Ionicons name="qr-code" size={16} color={colors.white} />
-                </Row>
-              </Row>
-            </LinearGradient>
-          </Press>
-        ) : (
-          <Card dark style={styles.hero}>
-            <View style={{ position: 'absolute', right: -30, top: -20, opacity: 0.22 }}>
-              <Lion size={200} color="red" />
-            </View>
-            <T v="overline" color={colors.red}>
-              Nothing booked yet
-            </T>
-            <T v="title" color={colors.white} style={{ marginTop: space.sm, maxWidth: 230 }}>
-              Your next session is two taps away.
-            </T>
-            <Button title="Find a class" kind="primary" size="md" icon="search" onPress={() => router.push('/book')} style={{ alignSelf: 'flex-start', marginTop: space.xl }} />
-          </Card>
-        )}
+        {next ? <NextUp item={next} now={now} /> : <EmptyHero />}
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(160).duration(500)}>
         <LiveStatus now={now} />
       </Animated.View>
 
-      <SectionTitle title="Book something" action="See all" onAction={() => router.push('/book')} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -space.xl }} contentContainerStyle={{ paddingHorizontal: space.xl, gap: space.md }}>
-        {CATEGORIES.map((c) => (
-          <Press key={c.id} onPress={() => router.push({ pathname: '/book', params: { cat: c.id } })} style={styles.catCard}>
-            <Image source={c.photo} style={StyleSheet.absoluteFill} contentFit="cover" />
-            <LinearGradient colors={['transparent', 'rgba(11,11,12,0.85)']} style={StyleSheet.absoluteFill} />
-            <View style={styles.catIcon}>
-              <Ionicons name={c.icon as never} size={16} color={colors.white} />
-            </View>
-            <T v="heading" color={colors.white} style={{ position: 'absolute', left: 14, bottom: 12 }}>
-              {c.label}
-            </T>
-          </Press>
-        ))}
-      </ScrollView>
+      <SectionTitle title="Book" />
+      <Animated.View entering={FadeInDown.delay(220).duration(500)} style={{ gap: space.md }}>
+        <BookTile
+          href="/qe2"
+          photo={require('@/assets/photos/gym.jpg')}
+          eyebrow="Book the leisure centre"
+          title="QEII"
+          chips={['Gym', 'Classes', 'Swim', 'Climb']}
+        />
+        <BookTile
+          href="/sport"
+          photo={require('@/assets/photos/clubs.jpg')}
+          eyebrow="Book sport"
+          title="DMU Sport"
+          chips={['Teams', 'S&C', 'Leagues', 'Societies']}
+        />
+      </Animated.View>
+
+      <Row gap={space.md} style={{ marginTop: space.md }}>
+        <QuickTile icon="ticket-outline" title="Manage bookings" onPress={() => router.push('/bookings')} />
+        <QuickTile icon="card-outline" title="Memberships" onPress={() => router.navigate('/account')} />
+      </Row>
+
+      {upcoming.length > 1 && (
+        <>
+          <SectionTitle title="Up next" />
+          {upcoming.slice(1, 5).map((u) => (
+            <UpcomingRow key={u.id} item={u} />
+          ))}
+        </>
+      )}
 
       {!membership && (
         <Press onPress={() => router.push('/join')} scaleTo={0.98} style={{ marginTop: space.xxl }}>
           <Card style={{ padding: space.xl, flexDirection: 'row', alignItems: 'center', gap: space.lg }}>
             <View style={{ flex: 1 }}>
               <T v="overline" color={colors.red}>
-                Membership
+                Leisure membership
               </T>
               <T v="heading" style={{ marginTop: 4 }}>
                 Go unlimited for £{PLANS[0].price}/month
@@ -125,8 +103,8 @@ export default function Home() {
         </Press>
       )}
 
-      <SectionTitle title="Up next" action="Timetable" onAction={() => router.push('/book')} />
-      {upNext.map((s) => (
+      <SectionTitle title="On at QEII today" action="Timetable" onAction={() => router.navigate('/qe2')} />
+      {today.map((s) => (
         <SessionRow key={s.id} session={s} />
       ))}
 
@@ -139,6 +117,118 @@ export default function Home() {
         </Row>
       </Press>
     </Screen>
+  );
+}
+
+function NextUp({ item, now }: { item: UpcomingItem; now: Date }) {
+  const team = item.kind !== 'booking';
+  return (
+    <Press onPress={() => router.push(item.href as Href)} scaleTo={0.98}>
+      <LinearGradient colors={team ? [colors.ink3, colors.ink] : [colors.red, colors.redDeep]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
+        <View style={{ position: 'absolute', right: -30, top: -20, opacity: team ? 0.3 : 0.18 }}>
+          <Lion size={200} color={team ? 'red' : 'white'} />
+        </View>
+        <Row style={{ justifyContent: 'space-between' }}>
+          <Badge label={`Up next · ${relative(item.start, now)}`} tone="dark" icon="time" />
+          <BellButton item={item} dark />
+        </Row>
+        <T v="caption" color={team ? colors.red : 'rgba(255,255,255,0.75)'} style={{ marginTop: space.lg, textTransform: 'uppercase', letterSpacing: 1 }}>
+          {item.subtitle}
+        </T>
+        <T v="title" color={colors.white} style={{ marginTop: 2 }}>
+          {item.title}
+        </T>
+        <T v="body" color="rgba(255,255,255,0.8)">
+          {dayLabel(item.start, now)} · {time(item.start)}–{endTime(item.start, item.minutes)}
+        </T>
+        <Row gap={6} style={{ marginTop: space.lg }}>
+          <Ionicons name="location" size={15} color="rgba(255,255,255,0.8)" />
+          <T v="smallBold" color={colors.white}>
+            {item.location}
+          </T>
+        </Row>
+      </LinearGradient>
+    </Press>
+  );
+}
+
+function EmptyHero() {
+  return (
+    <Card dark style={styles.hero}>
+      <View style={{ position: 'absolute', right: -30, top: -20, opacity: 0.22 }}>
+        <Lion size={200} color="red" />
+      </View>
+      <T v="overline" color={colors.red}>
+        Nothing booked yet
+      </T>
+      <T v="title" color={colors.white} style={{ marginTop: space.sm, maxWidth: 240 }}>
+        Your next session is two taps away.
+      </T>
+      <Row gap={space.sm} style={{ marginTop: space.xl }}>
+        <Button title="Book QEII" size="md" onPress={() => router.navigate('/qe2')} />
+        <Button title="Join a team" size="md" kind="light" onPress={() => router.push('/sport/team')} />
+      </Row>
+    </Card>
+  );
+}
+
+function BookTile({ href, photo, eyebrow, title, chips }: { href: Href; photo: number; eyebrow: string; title: string; chips: string[] }) {
+  return (
+    <Press onPress={() => router.navigate(href)} scaleTo={0.98} style={styles.tile}>
+      <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <LinearGradient colors={['rgba(11,11,12,0.05)', 'rgba(11,11,12,0.88)']} style={StyleSheet.absoluteFill} />
+      <View style={{ position: 'absolute', left: space.lg, right: space.lg, bottom: space.lg }}>
+        <T v="overline" color={colors.white} style={{ opacity: 0.85 }}>
+          {eyebrow}
+        </T>
+        <Row style={{ justifyContent: 'space-between', marginTop: 2 }}>
+          <T v="title" color={colors.white}>
+            {title}
+          </T>
+          <View style={styles.tileArrow}>
+            <Ionicons name="arrow-forward" size={18} color={colors.white} />
+          </View>
+        </Row>
+        <Row gap={6} style={{ marginTop: space.sm, flexWrap: 'wrap' }}>
+          {chips.map((c) => (
+            <Badge key={c} label={c} tone="dark" />
+          ))}
+        </Row>
+      </View>
+    </Press>
+  );
+}
+
+function QuickTile({ icon, title, onPress }: { icon: IconName; title: string; onPress: () => void }) {
+  return (
+    <Press onPress={onPress} scaleTo={0.97} style={styles.quick}>
+      <View style={styles.quickIcon}>
+        <Ionicons name={icon} size={19} color={colors.red} />
+      </View>
+      <T v="smallBold" style={{ flex: 1 }}>
+        {title}
+      </T>
+      <Ionicons name="chevron-forward" size={16} color={colors.textFaint} />
+    </Press>
+  );
+}
+
+export function UpcomingRow({ item }: { item: UpcomingItem }) {
+  return (
+    <Press onPress={() => router.push(item.href as Href)} scaleTo={0.98} style={styles.upRow}>
+      <View style={[styles.upIcon, item.kind !== 'booking' && { backgroundColor: colors.ink }]}>
+        <Ionicons name={item.icon as never} size={18} color={item.kind !== 'booking' ? colors.white : colors.red} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <T v="bodyBold" numberOfLines={2}>
+          {item.title}
+        </T>
+        <T v="caption" color={colors.textMuted}>
+          {dayShort(item.start)} · {time(item.start)} · {item.location}
+        </T>
+      </View>
+      <BellButton item={item} compact />
+    </Press>
   );
 }
 
@@ -157,16 +247,14 @@ function LiveStatus({ now }: { now: Date }) {
       <Row style={{ justifyContent: 'space-between' }}>
         <View>
           <T v="caption" color={colors.textMuted}>
-            Gym right now
+            QEII gym right now
           </T>
           <Row gap={8} style={{ marginTop: 2 }}>
             <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: tone }} />
             <T v="heading">{open ? label : 'Closed'}</T>
           </Row>
         </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Badge label={open ? `Open until ${today.close}` : `Opens ${today.open}`} tone={open ? 'green' : 'neutral'} />
-        </View>
+        <Badge label={open ? `Open until ${today.close}` : `Opens ${today.open}`} tone={open ? 'green' : 'neutral'} />
       </Row>
       <Row gap={4} style={{ marginTop: space.lg, alignItems: 'flex-end', height: 44 }}>
         {hours.map((h) => {
@@ -191,7 +279,11 @@ function LiveStatus({ now }: { now: Date }) {
 const styles = StyleSheet.create({
   avatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
   hero: { borderRadius: radius.xl, padding: space.xl, overflow: 'hidden', minHeight: 190 },
-  catCard: { width: 140, height: 170, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.ink, ...shadow },
-  catIcon: { position: 'absolute', top: 12, left: 12, width: 30, height: 30, borderRadius: 10, backgroundColor: 'rgba(168,29,53,0.95)', alignItems: 'center', justifyContent: 'center' },
+  tile: { height: 190, borderRadius: radius.xl, overflow: 'hidden', backgroundColor: colors.ink, ...shadow },
+  tileArrow: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' },
+  quick: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, padding: space.md, borderRadius: radius.lg, backgroundColor: colors.surface, ...shadow },
+  quickIcon: { width: 34, height: 34, borderRadius: 11, backgroundColor: colors.redSoft, alignItems: 'center', justifyContent: 'center' },
+  upRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, borderRadius: radius.lg, backgroundColor: colors.surface, marginBottom: space.md, ...shadow },
+  upIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: colors.redSoft, alignItems: 'center', justifyContent: 'center' },
   arrow: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' },
 });

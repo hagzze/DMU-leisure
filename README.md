@@ -14,13 +14,26 @@ Everything runs on demo data. No real payments are taken and nothing connects to
 | Crashes and bugs | Small, modern codebase, type-checked and linted |
 | Dated, generic template look | DMU red, white and black, with the MyDMU lion |
 
+## How the app is organised
+
+The bottom bar has four tabs: **Home · QEII · Sport · Account**.
+
+- **Home:** your next session, how busy the gym is, two big booking tiles (*QEII Leisure Centre* and *DMU Sport*), quick links to Manage bookings and Memberships, and **Up next**. Up next shows everything you're signed up for, including team training such as "Rugby Men's 1st XV training", with a bell to get a phone notification an hour before.
+- **QEII:** the leisure centre timetable (gym, classes, swim, climb, sports hall) and your leisure membership.
+- **Sport:** DMU Sport.
+  - **DMU Team (sports clubs)** and **DMU Team Strength & Conditioning** are the main features. Opening either one checks for a membership straight away. With no membership it shows *No membership detected → Get your membership*. You pick your team, fill in first name, last name, email and date of birth (pre-filled), pay, and you're in.
+  - **More from DMU Sport:** DMU Active (movement for your wellbeing), DMU Learn (learn new sports with new people), DMU Campus (student tournaments and leagues).
+  - **Societies:** join in the same simple way.
+- **Account:** every membership in one place (leisure, teams, S&C, societies), bookings, wallet and settings.
+
 ## Screens
 
 | | | | |
 | --- | --- | --- | --- |
-| ![Sign in](docs/screenshots/01-sign-in.jpg) | ![Home](docs/screenshots/03-home.jpg) | ![Timetable](docs/screenshots/04-timetable.jpg) | ![Class](docs/screenshots/05-class.jpg) |
-| ![Checkout](docs/screenshots/06-checkout.jpg) | ![Booked](docs/screenshots/07-booked.jpg) | ![Plans](docs/screenshots/09-plans.jpg) | ![Join form](docs/screenshots/10-join-details.jpg) |
-| ![Health check](docs/screenshots/11-join-health.jpg) | ![Membership card](docs/screenshots/13-membership-card.jpg) | ![Entry code](docs/screenshots/14-entry-code.jpg) | ![Account](docs/screenshots/15-account.jpg) |
+| ![Home](docs/screenshots/20-home-v2.jpg) | ![Book tiles](docs/screenshots/21-home-book-tiles.jpg) | ![Up next](docs/screenshots/22-home-up-next.jpg) | ![Sport hub](docs/screenshots/23-sport-hub.jpg) |
+| ![No membership](docs/screenshots/25-team-no-membership.jpg) | ![Pick team](docs/screenshots/26-team-pick.jpg) | ![Details](docs/screenshots/27-team-details.jpg) | ![Welcome](docs/screenshots/28-team-welcome.jpg) |
+| ![Club training](docs/screenshots/30-club-training.jpg) | ![Notification](docs/screenshots/32-test-notification.jpg) | ![S&C](docs/screenshots/34-snc-member.jpg) | ![Account](docs/screenshots/37-account-memberships.jpg) |
+| ![QEII](docs/screenshots/38-qeii-tab.jpg) | ![Checkout](docs/screenshots/06-checkout.jpg) | ![Societies](docs/screenshots/35-societies.jpg) | ![DMU Active](docs/screenshots/36-dmu-active.jpg) |
 
 ## Run it
 
@@ -37,12 +50,16 @@ npx expo start
 
 - Any password works on the sign-in screen.
 - **Account → Reset demo** wipes bookings, membership and login for a fresh walkthrough.
-- A good walkthrough: sign in → book a class with Apple Pay → join Student Unlimited → book another class free → show the entry code.
+- A good walkthrough: sign in → Sport → DMU Team ("No membership detected") → Get your membership → Rugby, Men's 1st XV → pay → the training appears in Up next on Home → tap the bell → **Send a test notification** on the club page.
+- The test notification fires after 5 seconds. On a phone, lock the screen to see it arrive like a real notification.
 
 ## Project layout
 
 - `src/app/` — screens (Expo Router)
 - `src/components/` — buttons, form fields, sheets, pay sheet, membership card
-- `src/data.ts` — demo timetable, plans and opening hours
-- `src/store.tsx` — login, bookings, membership and saved card (kept on the device)
+- `src/data.ts`: demo QEII timetable, plans and opening hours
+- `src/sport.ts`: demo DMU Sport clubs, teams, training times, S&C plans, programmes and societies
+- `src/schedule.ts`: builds the Up next list from bookings, team training and S&C
+- `src/notify.ts` / `notify.web.ts`: phone and browser reminders
+- `src/store.tsx`: login, bookings, memberships, reminders and saved card (kept on the device)
 - `src/theme.ts` — colours, type and spacing

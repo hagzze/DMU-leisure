@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
 
-import { Badge, Button, Press, Row, Screen, T } from '@/components/ui';
+import { Badge, Button, Press, Row, Screen, T, TopBar } from '@/components/ui';
 import { categoryOf, sessionById } from '@/data';
 import { dayLabel, endTime, money, time } from '@/format';
 import { upcomingBookings, useStore } from '@/store';
@@ -13,7 +13,9 @@ import { colors, radius, shadow, space } from '@/theme';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function Bookings() {
-  const { bookings } = useStore();
+  const { bookings, activities, cancelActivity } = useStore();
+  const [now] = useState(() => Date.now());
+  const sportSessions = activities.filter((a) => new Date(a.start).getTime() + a.minutes * 60000 > now).sort((a, b) => a.start.localeCompare(b.start));
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
   const upcoming = upcomingBookings(bookings);
   const upcomingIds = new Set(upcoming.map((u) => u.booking.id));
@@ -25,7 +27,8 @@ export default function Bookings() {
   const spent = bookings.reduce((n, b) => n + b.paid, 0);
 
   return (
-    <Screen tabs>
+    <Screen>
+      <TopBar />
       <T v="overline" color={colors.red}>
         Your schedule
       </T>
@@ -34,7 +37,7 @@ export default function Bookings() {
       </T>
 
       <Row gap={space.md} style={{ marginTop: space.xl }}>
-        <Stat label="Coming up" value={String(upcoming.length)} />
+        <Stat label="Coming up" value={String(upcoming.length + sportSessions.length)} />
         <Stat label="This term" value={String(bookings.length)} />
         <Stat label="Spent" value={money(spent) === 'Free' ? '£0' : money(spent)} />
       </Row>
@@ -50,7 +53,28 @@ export default function Bookings() {
       </View>
 
       <View style={{ marginTop: space.lg }}>
-        {list.length === 0 && (
+        {tab === 'upcoming' && sportSessions.length > 0 && (
+          <View style={{ marginBottom: space.lg }}>
+            <T v="overline" color={colors.textMuted} style={{ marginBottom: space.md }}>
+              DMU Sport sessions
+            </T>
+            {sportSessions.map((a) => (
+              <Row key={a.id} gap={space.md} style={{ backgroundColor: colors.surface, borderRadius: radius.lg, padding: space.md, marginBottom: space.sm, ...shadow }}>
+                <View style={{ flex: 1 }}>
+                  <T v="caption" color={colors.textMuted}>
+                    {a.subtitle} · {dayLabel(a.start)} · {time(a.start)}
+                  </T>
+                  <T v="bodyBold">{a.title}</T>
+                  <T v="caption" color={colors.textMuted}>
+                    {a.location}
+                  </T>
+                </View>
+                <Button title="Cancel" kind="ghost" size="sm" onPress={() => cancelActivity(a.id)} />
+              </Row>
+            ))}
+          </View>
+        )}
+        {list.length === 0 && sportSessions.length === 0 && (
           <View style={{ alignItems: 'center', paddingVertical: space.xxxl }}>
             <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: colors.redSoft, alignItems: 'center', justifyContent: 'center' }}>
               <Ionicons name="ticket-outline" size={34} color={colors.red} />
@@ -61,7 +85,7 @@ export default function Bookings() {
             <T v="small" color={colors.textMuted} center style={{ marginTop: 4, maxWidth: 260 }}>
               {tab === 'upcoming' ? 'Pick a class, a swim or a gym slot and it will show up here.' : 'Sessions you have been to will appear here.'}
             </T>
-            {tab === 'upcoming' && <Button title="Browse timetable" size="md" onPress={() => router.push('/book')} style={{ marginTop: space.xl }} />}
+            {tab === 'upcoming' && <Button title="Browse timetable" size="md" onPress={() => router.navigate('/qe2')} style={{ marginTop: space.xl }} />}
           </View>
         )}
 

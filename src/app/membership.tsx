@@ -6,7 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { EntryCode, MemberCard } from '@/components/brand';
 import { PlanCard } from '@/components/plan-card';
-import { Button, Card, Divider, ListRow, Press, Row, Screen, Sheet, T } from '@/components/ui';
+import { Button, Card, Divider, ListRow, Press, Row, Screen, Sheet, T, TopBar } from '@/components/ui';
 import { PLANS } from '@/data';
 import { dateLong } from '@/format';
 import { planById, useStore } from '@/store';
@@ -23,9 +23,10 @@ export default function MembershipTab() {
     const renews = new Date(membership.since);
     renews.setMonth(renews.getMonth() + (plan.period === 'year' ? 12 : 1));
     return (
-      <Screen tabs>
+      <Screen>
+        <TopBar />
         <T v="overline" color={colors.red}>
-          Membership
+          QEII Leisure membership
         </T>
         <T v="hero" style={{ marginTop: 2, marginBottom: space.xl }}>
           Your card
@@ -100,9 +101,10 @@ export default function MembershipTab() {
   }
 
   return (
-    <Screen tabs>
+    <Screen>
+      <TopBar />
       <T v="overline" color={colors.red}>
-        Membership
+        QEII Leisure membership
       </T>
       <T v="hero" style={{ marginTop: 2 }}>
         Pick your plan

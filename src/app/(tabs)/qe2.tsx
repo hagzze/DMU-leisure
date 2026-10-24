@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -8,6 +8,7 @@ import { SessionRow } from '@/components/session-row';
 import { Chip, Press, Row, Screen, T } from '@/components/ui';
 import { CATEGORIES, Category, SESSIONS, startOfDay } from '@/data';
 import { sameDay, shortDay } from '@/format';
+import { planById, useStore } from '@/store';
 import { colors, radius, space } from '@/theme';
 
 const PARTS = [
@@ -16,7 +17,8 @@ const PARTS = [
   { label: 'Evening', from: 17, to: 24 },
 ];
 
-export default function Book() {
+export default function Qe2() {
+  const { membership } = useStore();
   const params = useLocalSearchParams<{ cat?: Category }>();
   const [cat, setCat] = useState<Category | 'all'>(params.cat ?? 'all');
   const [dayIndex, setDayIndex] = useState(0);
@@ -41,11 +43,25 @@ export default function Book() {
     <Screen tabs stickyHeaderIndices={[1]}>
       <View>
         <T v="overline" color={colors.red}>
-          Timetable
+          QEII Leisure Centre
         </T>
         <T v="hero" style={{ marginTop: 2 }}>
-          Book
+          Book a session
         </T>
+        <Press onPress={() => router.push('/membership')} scaleTo={0.98} style={{ marginTop: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, borderRadius: radius.lg, backgroundColor: membership ? colors.ink : colors.surface, borderWidth: 1, borderColor: membership ? colors.ink : colors.line }}>
+          <Ionicons name={membership ? 'card' : 'card-outline'} size={20} color={membership ? colors.white : colors.red} />
+          <View style={{ flex: 1 }}>
+            <T v="smallBold" color={membership ? colors.white : colors.text}>
+              {membership ? planById(membership.planId)?.name : 'Pay as you go'}
+            </T>
+            <T v="caption" color={membership ? 'rgba(255,255,255,0.6)' : colors.textMuted}>
+              {membership ? 'Every session here is included' : 'Join for unlimited sessions from £15/month'}
+            </T>
+          </View>
+          <T v="smallBold" color={membership ? colors.white : colors.red}>
+            {membership ? 'Show card' : 'See plans'}
+          </T>
+        </Press>
       </View>
 
       <View style={{ backgroundColor: colors.bg, paddingTop: space.lg, paddingBottom: space.sm, marginHorizontal: -space.xl, paddingHorizontal: space.xl }}>

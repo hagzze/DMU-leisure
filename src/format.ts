@@ -24,6 +24,14 @@ export function dayLabel(iso: string | Date, now = new Date()) {
   return `${LONG_DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
+// Today, Tomorrow, or "Tue 27 Oct".
+export function dayShort(iso: string | Date, now = new Date()) {
+  const label = dayLabel(iso, now);
+  if (label === 'Today' || label === 'Tomorrow') return label;
+  const d = new Date(iso);
+  return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+
 export const dateLong = (iso: string | Date) => {
   const d = new Date(iso);
   return `${LONG_DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;

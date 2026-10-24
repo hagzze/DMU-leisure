@@ -30,17 +30,17 @@ export type Plan = {
 export const CENTRE = {
   name: 'QEII Diamond Jubilee Leisure Centre',
   short: 'QEII Leisure Centre',
-  address: 'Duns Lane, Leicester',
+  address: 'Duns Lane, Leicester LE3 5LX',
 };
 
-// Opening hours, 0 = Sunday.
+// Opening hours from dmu.ac.uk, 0 = Sunday.
 export const HOURS: { day: string; open: string; close: string }[] = [
-  { day: 'Sunday', open: '08:00', close: '20:00' },
+  { day: 'Sunday', open: '09:00', close: '20:00' },
   { day: 'Monday', open: '06:30', close: '22:00' },
   { day: 'Tuesday', open: '06:30', close: '22:00' },
   { day: 'Wednesday', open: '06:30', close: '22:00' },
   { day: 'Thursday', open: '06:30', close: '22:00' },
-  { day: 'Friday', open: '06:30', close: '21:00' },
+  { day: 'Friday', open: '06:30', close: '22:00' },
   { day: 'Saturday', open: '08:00', close: '20:00' },
 ];
 

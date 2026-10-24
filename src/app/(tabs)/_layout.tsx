@@ -12,18 +12,18 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
 
 const TABS: Record<string, { label: string; icon: IconName; iconOn: IconName }> = {
   index: { label: 'Home', icon: 'home-outline', iconOn: 'home' },
-  book: { label: 'Book', icon: 'calendar-outline', iconOn: 'calendar' },
-  bookings: { label: 'Bookings', icon: 'ticket-outline', iconOn: 'ticket' },
-  membership: { label: 'Membership', icon: 'card-outline', iconOn: 'card' },
+  qe2: { label: 'QEII', icon: 'barbell-outline', iconOn: 'barbell' },
+  sport: { label: 'Sport', icon: 'trophy-outline', iconOn: 'trophy' },
+  account: { label: 'Account', icon: 'person-circle-outline', iconOn: 'person-circle' },
 };
 
 export default function TabLayout() {
   return (
     <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg } }}>
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="book" />
-      <Tabs.Screen name="bookings" />
-      <Tabs.Screen name="membership" />
+      <Tabs.Screen name="qe2" />
+      <Tabs.Screen name="sport" />
+      <Tabs.Screen name="account" />
     </Tabs>
   );
 }

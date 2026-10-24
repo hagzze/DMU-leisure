@@ -8,6 +8,7 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import '@/global.css';
 import { PortalHost } from '@/components/portal';
+import { ToastProvider } from '@/components/toast';
 import { T } from '@/components/ui';
 import { StoreProvider, useStore } from '@/store';
 import { colors } from '@/theme';
@@ -19,8 +20,10 @@ export default function RootLayout() {
     <StoreProvider>
       <PhoneFrame>
         <PortalHost>
-          <StatusBar style="dark" />
-          <AppStack />
+          <ToastProvider>
+            <StatusBar style="dark" />
+            <AppStack />
+          </ToastProvider>
         </PortalHost>
       </PhoneFrame>
     </StoreProvider>
@@ -42,9 +45,16 @@ function AppStack() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="class/[id]" />
         <Stack.Screen name="join" />
-        <Stack.Screen name="account" />
+        <Stack.Screen name="bookings" />
+        <Stack.Screen name="membership" />
         <Stack.Screen name="card" />
         <Stack.Screen name="centre" />
+        <Stack.Screen name="sport/team" />
+        <Stack.Screen name="sport/club/[id]" />
+        <Stack.Screen name="sport/snc" />
+        <Stack.Screen name="sport/programme/[id]" />
+        <Stack.Screen name="sport/societies" />
+        <Stack.Screen name="sport/join" />
       </Stack.Protected>
       <Stack.Protected guard={!user}>
         <Stack.Screen name="sign-in" options={{ animation: 'fade' }} />

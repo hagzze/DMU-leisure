@@ -33,7 +33,7 @@ export default function ClassDetail() {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <T v="heading">Session not found</T>
-        <Button title="Back to timetable" kind="ghost" onPress={() => router.replace('/book')} style={{ marginTop: space.lg }} />
+        <Button title="Back to timetable" kind="ghost" onPress={() => router.replace('/qe2')} style={{ marginTop: space.lg }} />
       </View>
     );
   }
@@ -183,7 +183,7 @@ export default function ClassDetail() {
             We&apos;ll remind you an hour before.
           </T>
         </View>
-        <Button title="View my bookings" kind="dark" onPress={() => { setSuccess(false); router.navigate('/bookings'); }} style={{ marginTop: space.xxl }} />
+        <Button title="View my bookings" kind="dark" onPress={() => { setSuccess(false); router.push('/bookings'); }} style={{ marginTop: space.xxl }} />
         <Button title="Done" kind="ghost" onPress={() => setSuccess(false)} style={{ marginTop: space.md }} />
       </Sheet>
 

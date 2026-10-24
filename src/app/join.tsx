@@ -94,7 +94,7 @@ export default function Join() {
           {store.membership && <MemberCard user={{ ...u, ...form }} membership={store.membership} />}
         </Animated.View>
         <View style={{ flex: 1 }} />
-        <Button title="Book my first class" onPress={() => router.replace('/book')} />
+        <Button title="Book my first class" onPress={() => router.replace('/qe2')} />
         <Button title="Go to home" kind="ghostDark" onPress={() => router.replace('/')} style={{ marginTop: space.md }} />
       </View>
     );
