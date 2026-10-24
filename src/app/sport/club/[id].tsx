@@ -10,6 +10,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EventRow } from '@/components/event-row';
 import { MembershipCheck } from '@/components/membership-check';
 import { useReminders } from '@/components/reminders';
+import { useToast } from '@/components/toast';
+import { dayLabel, time } from '@/format';
 import { BackButton, Badge, Button, Card, Divider, Row, Sheet, T } from '@/components/ui';
 import { clubById, DAY_NAMES, teamEvents } from '@/sport';
 import { useStore } from '@/store';
@@ -18,8 +20,9 @@ import { colors, radius, space } from '@/theme';
 export default function ClubPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { clubs, leaveClub } = useStore();
+  const { clubs, leaveClub, teamBookings, toggleTeamBooking } = useStore();
   const { sendTest } = useReminders();
+  const toast = useToast();
   const [leaving, setLeaving] = useState(false);
   const [now] = useState(() => new Date());
 
@@ -64,7 +67,7 @@ export default function ClubPage() {
               <>
                 <Card dark style={{ padding: space.xl }}>
                   <T v="caption" color="rgba(255,255,255,0.6)">
-                    Your team
+                    {mine.trial ? 'Free trial · two sessions' : 'Your team'}
                   </T>
                   <T v="title" color={colors.white}>
                     {mine.team}
@@ -73,14 +76,24 @@ export default function ClubPage() {
                     {mine.number}
                   </T>
                 </Card>
-                <Row style={{ justifyContent: 'space-between', marginTop: space.xxl, marginBottom: space.md }}>
-                  <T v="heading">Coming up</T>
-                  <T v="caption" color={colors.textMuted}>
-                    Tap the bell for a reminder
-                  </T>
-                </Row>
+                <T v="heading" style={{ marginTop: space.xxl }}>
+                  Book training and transport
+                </T>
+                <T v="small" color={colors.textMuted} style={{ marginTop: 2, marginBottom: space.md }}>
+                  One tap books your place and, for Beaumont Park, your seat on the free bus.
+                </T>
                 {events.map((e) => (
-                  <EventRow key={e.id} event={e} short />
+                  <EventRow
+                    key={e.id}
+                    event={e}
+                    short
+                    booked={teamBookings.includes(e.id)}
+                    onToggleBook={() => {
+                      const was = teamBookings.includes(e.id);
+                      toggleTeamBooking(e.id);
+                      toast(was ? { title: 'Booking cancelled', icon: 'close-circle' } : { title: e.venue === 'Beaumont Park' ? 'Training and bus booked' : 'Training booked', body: `${dayLabel(e.start)} at ${time(e.start)}` });
+                    }}
+                  />
                 ))}
                 {events[0] && (
                   <Button

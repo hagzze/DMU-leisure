@@ -24,8 +24,10 @@ const COPY: Record<Kind, { eyebrow: string; choose: string; chooseHint: string }
 const STEPS = ['Choose', 'Details', 'Pay'];
 
 export default function SportJoin() {
-  const params = useLocalSearchParams<{ kind?: Kind; id?: string }>();
+  const params = useLocalSearchParams<{ kind?: Kind; id?: string; trial?: string }>();
   const kind: Kind = params.kind ?? 'team';
+  // Free two-week team trial: same flow, nothing to pay.
+  const trial = kind === 'team' && params.trial === '1';
   const insets = useSafeAreaInsets();
   const store = useStore();
   const u = store.user!;
@@ -52,7 +54,7 @@ export default function SportJoin() {
 
   const item =
     kind === 'team'
-      ? { name: club ? `${club.name} · ${team ?? ''}` : '', price: club?.fee ?? 0, period: 'year' }
+      ? { name: club ? `${club.name} · ${team ?? ''}` : '', price: trial ? 0 : club?.fee ?? 0, period: trial ? 'two weeks' : 'year' }
       : kind === 'snc'
         ? { name: `S&C ${plan.name}`, price: plan.price, period: plan.period }
         : { name: society?.name ?? '', price: society?.fee ?? 0, period: 'year' };
@@ -76,12 +78,12 @@ export default function SportJoin() {
 
   const next = () => {
     if (step === 1 && !validate()) return;
-    if (step === 2) return setPaying(true);
+    if (step === 2) return trial ? finish() : setPaying(true);
     setStep(step + 1);
   };
 
   const finish = () => {
-    if (kind === 'team' && club && team) store.joinClub(club.id, team, form);
+    if (kind === 'team' && club && team) store.joinClub(club.id, team, form, trial);
     if (kind === 'snc') store.joinSnc(planId, form);
     if (kind === 'society' && society) store.joinSociety(society.id, form);
     setPaying(false);
@@ -98,13 +100,13 @@ export default function SportJoin() {
             <Ionicons name="checkmark" size={40} color={colors.white} />
           </Animated.View>
           <T v="overline" color={colors.red} style={{ marginTop: space.xl }}>
-            Membership active
+            {trial ? 'Free trial started' : 'Membership active'}
           </T>
           <T v="title" color={colors.white} center style={{ marginTop: space.sm }}>
             Welcome, {form.firstName}.
           </T>
           <T v="body" color="rgba(255,255,255,0.6)" center style={{ marginTop: space.sm }}>
-            {kind === 'team' ? 'Your training and fixtures are now on your home screen. Tap the bell on any session for a reminder.' : kind === 'snc' ? 'Your coached sessions are now on your home screen.' : 'Your committee will be in touch about the next social.'}
+            {trial ? 'You have two free sessions over the next two weeks. Love it? Upgrade to the full membership any time.' : kind === 'team' ? 'Your training and fixtures are now on your home screen. Tap the bell on any session for a reminder.' : kind === 'snc' ? 'Your coached sessions are now on your home screen.' : 'Your committee will be in touch about the next social.'}
           </T>
         </Animated.View>
         <Animated.View entering={FadeInUp.delay(350).springify().damping(16)} style={styles.card}>
@@ -114,7 +116,7 @@ export default function SportJoin() {
           <Row gap={8}>
             <Lion size={22} color="white" />
             <T v="overline" color={colors.white}>
-              {COPY[kind].eyebrow}
+              {trial ? 'Free 2-week trial' : COPY[kind].eyebrow}
             </T>
           </Row>
           <T v="title" color={colors.white} style={{ marginTop: space.xxl }}>
@@ -137,7 +139,7 @@ export default function SportJoin() {
         <Row style={{ justifyContent: 'space-between' }}>
           <BackButton onPress={() => (step === 0 ? router.back() : setStep(step - 1))} />
           <T v="smallBold" color={colors.textMuted}>
-            {COPY[kind].eyebrow}
+            {trial ? 'Free 2-week trial' : COPY[kind].eyebrow}
           </T>
           <Press onPress={() => router.back()} haptic={false} style={{ minWidth: 42, alignItems: 'flex-end' }}>
             <T v="smallBold" color={colors.textMuted}>
@@ -268,9 +270,9 @@ export default function SportJoin() {
 
           {step === 2 && (
             <>
-              <T v="title">Review and pay</T>
+              <T v="title">{trial ? 'Start your free trial' : 'Review and pay'}</T>
               <T v="body" color={colors.textMuted} style={{ marginTop: 4, marginBottom: space.xl }}>
-                One payment covers the whole {item.period}.
+                {trial ? 'Two free sessions over the next two weeks. No card needed, nothing to cancel.' : `One payment covers the whole ${item.period}.`}
               </T>
               <Card>
                 <Row style={{ justifyContent: 'space-between', padding: space.lg }}>
@@ -293,7 +295,7 @@ export default function SportJoin() {
                 <Divider inset={space.lg} />
                 <Row style={{ justifyContent: 'space-between', padding: space.lg }}>
                   <T v="bodyBold">Due today</T>
-                  <T v="title">£{item.price}</T>
+                  <T v="title" color={trial ? colors.green : colors.text}>{trial ? 'Free' : `£${item.price}`}</T>
                 </Row>
               </Card>
             </>
@@ -302,7 +304,7 @@ export default function SportJoin() {
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + space.md }]}>
-        <Button title={step === 2 ? `Pay £${item.price} and join` : 'Continue'} icon={step === 2 ? 'lock-closed' : undefined} disabled={step === 0 && !chosen} onPress={next} />
+        <Button title={step === 2 ? (trial ? 'Start free trial' : `Pay £${item.price} and join`) : 'Continue'} icon={step === 2 ? (trial ? 'gift' : 'lock-closed') : undefined} disabled={step === 0 && !chosen} onPress={next} />
       </View>
 
       <PaySheet visible={paying} onClose={() => setPaying(false)} title={item.name} subtitle={`£${item.price} per ${item.period}`} amount={item.price} cta="Join" onPaid={finish} />

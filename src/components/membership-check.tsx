@@ -61,7 +61,7 @@ export function MembershipCheck({
             <Ionicons name="shield-outline" size={24} color={colors.red} />
           </View>
           <View style={{ flex: 1 }}>
-            <T v="heading">No {what} detected</T>
+            <T v="heading">No {what} on record</T>
             <T v="small" color={colors.textMuted}>
               {pitch}
             </T>

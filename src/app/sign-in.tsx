@@ -56,8 +56,8 @@ export default function SignIn() {
         <View style={{ flex: 1 }} />
 
         <Animated.View entering={FadeInUp.delay(150).duration(700)}>
-          <T v="overline" color={colors.red} style={{ marginBottom: space.md }}>
-            DMU Leisure
+          <T v="bodyBold" color={colors.white} style={{ marginBottom: space.md, opacity: 0.9 }}>
+            Leisure at DMU
           </T>
           <T style={styles.headline} color={colors.white}>
             Train more.{'\n'}Tap less.

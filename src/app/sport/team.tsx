@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { Lion } from '@/components/brand';
 import { MembershipCheck } from '@/components/membership-check';
 import { Badge, Button, Card, Press, Row, Screen, SectionTitle, T, TopBar } from '@/components/ui';
+import { dayShort } from '@/format';
 import { CLUBS, clubById } from '@/sport';
 import { useStore } from '@/store';
 import { colors, radius, shadow, space } from '@/theme';
@@ -41,7 +42,11 @@ export default function Team() {
                   <Lion size={150} />
                 </View>
                 <Row style={{ justifyContent: 'space-between' }}>
-                  <Badge label="Active" tone="green" icon="checkmark-circle" />
+                  {m.trial && m.until ? (
+                    <Badge label={`Free trial · ends ${dayShort(m.until)}`} tone="amber" icon="gift" />
+                  ) : (
+                    <Badge label="Active" tone="green" icon="checkmark-circle" />
+                  )}
                   <Ionicons name={club.icon as never} size={22} color={colors.white} />
                 </Row>
                 <T v="title" color={colors.white} style={{ marginTop: space.lg }}>
@@ -88,6 +93,25 @@ export default function Team() {
           Can&apos;t see your sport? DMU has 29 activities. Ask at the Watershed.
         </T>
       </Card>
+
+      {clubs.length === 0 && (
+        <Card dark style={{ padding: space.xl, marginTop: space.xxl }}>
+          <Row gap={space.md} style={{ alignItems: 'flex-start' }}>
+            <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="gift" size={22} color={colors.white} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <T v="heading" color={colors.white}>
+                Want to try the club out before committing?
+              </T>
+              <T v="body" color="rgba(255,255,255,0.7)" style={{ marginTop: 4 }}>
+                Have two free sessions on us. A two-week sport membership, free of charge.
+              </T>
+            </View>
+          </Row>
+          <Button title="Start my free trial" icon="arrow-forward" kind="light" onPress={() => router.push({ pathname: '/sport/join', params: { kind: 'team', trial: '1' } })} style={{ marginTop: space.xl }} />
+        </Card>
+      )}
     </Screen>
   );
 }

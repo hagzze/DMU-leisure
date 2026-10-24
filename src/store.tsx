@@ -18,7 +18,8 @@ export type Booking = { id: string; sessionId: string; bookedAt: string; paid: n
 
 export type Membership = { planId: string; since: string; number: string };
 
-export type ClubMembership = { clubId: string; team: string; since: string; number: string };
+// A trial is a free two-week membership with two sessions; `until` is when it ends.
+export type ClubMembership = { clubId: string; team: string; since: string; number: string; trial?: boolean; until?: string };
 export type SncMembership = { planId: string; since: string; number: string };
 export type SocietyMembership = { societyId: string; since: string };
 export type Activity = { id: string; title: string; subtitle: string; start: string; minutes: number; location: string; paid: number };
@@ -32,6 +33,8 @@ type State = {
   snc: SncMembership | null;
   societies: SocietyMembership[];
   activities: Activity[];
+  // team sessions booked (training and transport together), by event id
+  teamBookings: string[];
   // event id -> scheduled notification id
   reminders: Record<string, string>;
 };
@@ -49,7 +52,7 @@ const DEMO_USER: User = {
 
 const DEMO_CARD: Card = { brand: 'Visa', last4: '4242', expiry: '09/28', name: 'Alex Morgan' };
 
-const EMPTY: State = { user: null, card: null, bookings: [], membership: null, clubs: [], snc: null, societies: [], activities: [], reminders: {} };
+const EMPTY: State = { user: null, card: null, bookings: [], membership: null, clubs: [], snc: null, societies: [], activities: [], teamBookings: [], reminders: {} };
 
 const memberNumber = (prefix: string) => `${prefix}${Math.floor(10000000 + Math.random() * 89999999)}`;
 
@@ -65,12 +68,13 @@ type Store = State & {
   leaveMembership: () => void;
   saveCard: (card: Card | null) => void;
   updateUser: (patch: Partial<User>) => void;
-  joinClub: (clubId: string, team: string, details: Partial<User>) => void;
+  joinClub: (clubId: string, team: string, details: Partial<User>, trial?: boolean) => void;
   leaveClub: (clubId: string) => void;
   joinSnc: (planId: string, details: Partial<User>) => void;
   joinSociety: (societyId: string, details: Partial<User>) => void;
   setReminder: (eventId: string, notificationId: string | null) => void;
   bookActivity: (a: Activity) => void;
+  toggleTeamBooking: (eventId: string) => void;
   cancelActivity: (id: string) => void;
   resetDemo: () => void;
 };
@@ -136,12 +140,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     leaveMembership: () => setState((s) => ({ ...s, membership: null })),
     saveCard: (card) => setState((s) => ({ ...s, card })),
     updateUser: (patch) => setState((s) => ({ ...s, user: s.user ? { ...s.user, ...patch } : s.user })),
-    joinClub: (clubId, team, details) =>
-      setState((s) => ({
-        ...s,
-        user: s.user ? { ...s.user, ...details } : s.user,
-        clubs: [...s.clubs.filter((c) => c.clubId !== clubId), { clubId, team, since: new Date().toISOString(), number: memberNumber('TEAM') }],
-      })),
+    joinClub: (clubId, team, details, trial) =>
+      setState((s) => {
+        const since = new Date();
+        const until = trial ? new Date(since.getTime() + 14 * 86400000).toISOString() : undefined;
+        return {
+          ...s,
+          user: s.user ? { ...s.user, ...details } : s.user,
+          clubs: [...s.clubs.filter((c) => c.clubId !== clubId), { clubId, team, since: since.toISOString(), number: memberNumber(trial ? 'TRIAL' : 'TEAM'), trial, until }],
+        };
+      }),
     leaveClub: (clubId) => setState((s) => ({ ...s, clubs: s.clubs.filter((c) => c.clubId !== clubId) })),
     joinSnc: (planId, details) =>
       setState((s) => ({
@@ -155,6 +163,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         user: s.user ? { ...s.user, ...details } : s.user,
         societies: [...s.societies.filter((x) => x.societyId !== societyId), { societyId, since: new Date().toISOString() }],
       })),
+    toggleTeamBooking: (eventId) =>
+      setState((s) => ({ ...s, teamBookings: s.teamBookings.includes(eventId) ? s.teamBookings.filter((x) => x !== eventId) : [...s.teamBookings, eventId] })),
     bookActivity: (a) => setState((s) => ({ ...s, activities: [...s.activities.filter((x) => x.id !== a.id), a] })),
     cancelActivity: (id) => setState((s) => ({ ...s, activities: s.activities.filter((x) => x.id !== id) })),
     setReminder: (eventId, notificationId) =>
