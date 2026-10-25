@@ -249,6 +249,8 @@ export function Screen({ children, tabs, contentStyle, ...rest }: ScrollViewProp
 export function BackButton({ dark, onPress }: { dark?: boolean; onPress?: () => void }) {
   return (
     <Press
+      accessibilityRole="button"
+      accessibilityLabel="Back"
       onPress={onPress ?? (() => (router.canGoBack() ? router.back() : router.replace('/')))}
       style={[styles.round, dark ? { backgroundColor: 'rgba(0,0,0,0.45)' } : { backgroundColor: colors.surface, ...shadow }]}>
       <Ionicons name="chevron-back" size={22} color={dark ? colors.white : colors.ink} />

@@ -60,10 +60,10 @@ export default function SignIn() {
             Leisure at DMU
           </T>
           <T style={styles.headline} color={colors.white}>
-            Train more.{'\n'}Tap less.
+            All your sport.{'\n'}One app.
           </T>
           <T v="body" color="rgba(255,255,255,0.7)" style={{ marginTop: space.lg, maxWidth: 320 }}>
-            Gym, pool, climbing wall and every class at the QEII centre. Booked in seconds, paid in one tap.
+            The QEII centre, DMU Sport teams, classes and societies. Booked in seconds, paid with Apple Pay.
           </T>
         </Animated.View>
 
